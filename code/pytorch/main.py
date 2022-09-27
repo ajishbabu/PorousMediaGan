@@ -63,7 +63,7 @@ if opt.dataset in ['3D']:
                           ]))
 assert dataset
 
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize,
+dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize, drop_last=True,
                                          shuffle=True, num_workers=int(opt.workers))
 
 ngpu = int(opt.ngpu)
@@ -102,7 +102,7 @@ noise = torch.FloatTensor(opt.batchSize, nz, 1, 1, 1)
 fixed_noise = torch.FloatTensor(1, nz, 7, 7, 7).normal_(0, 1)
 fixed_noise_TI = torch.FloatTensor(1, nz, 1, 1, 1).normal_(0, 1)
 
-label = torch.FloatTensor(opt.batchSize)
+label = torch.FloatTensor(opt.batchSize, nc)
 real_label = 0.9
 fake_label = 0
 
@@ -141,7 +141,7 @@ for epoch in range(opt.niter):
             
         batch_size = real_cpu.size(0)
         input.data.resize_(real_cpu.size()).copy_(real_cpu)
-        label.data.resize_(batch_size).fill_(real_label)
+        label.data.resize_(torch.Size([128, 1])).fill_(real_label)
         
         output = netD(input)
         errD_real = criterion(output, label)
@@ -180,10 +180,10 @@ for epoch in range(opt.niter):
 
         print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
               % (epoch, opt.niter, i, len(dataloader),
-                 errD.data[0], errG.data[0], D_x, D_G_z1, D_G_z2))
+                 errD.data.item(), errG.data.item(), D_x, D_G_z1, D_G_z2))
         f.write('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
               % (epoch, opt.niter, i, len(dataloader),
-                 errD.data[0], errG.data[0], D_x, D_G_z1, D_G_z2))
+                 errD.data.item(), errG.data.item(), D_x, D_G_z1, D_G_z2))
         f.write('\n')
         f.close()
         
